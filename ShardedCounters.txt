@@ -1,1 +1,29 @@
 Sharded Counters
+How to handle High bursts of Likes for a tweet posted in twitter?
+  - Lets take an example. A celebrity posted a tweet and accumulates million likes
+  - Each like is an event, and every event is pushed to a queue.
+ -  A worker pulls the events from the queue and then updates the database for likes.
+
+What are sharded counters? 
+- They are also known as distributed counters
+- Each counter is divided into a number of shards. Each shard parallely computes the number of likes, comments or actions in parallel.
+- Write requests are balanced along these shards
+
+What is the workflow of sharded counters? 
+- A write request is sent to the server to increase the number of likes
+- This request is forwarded to a distributed counter.
+- The counter has shards 0-N, might pick any shard to conpute the like count, simrlary other write requests are distributed to other shards in the counter. The cumulative sum of all of shards is taken as the like count.
+
+What are the API's for Sharded Counter?
+- CreateCounter
+  api request:
+        - counter_id
+        - number_of_shards
+  How is number of shards computed?
+      - Number of followers 
+      - Post type - public ot private     
+- ReadCounter
+      - counter_id
+- WriteCounter
+      -counter_id
+      -action_type
