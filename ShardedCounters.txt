@@ -6,7 +6,7 @@ How to handle High bursts of Likes for a tweet posted in twitter?
 
 What are sharded counters? 
 - They are also known as distributed counters
-- Each counter is divided into a number of shards. Each shard parallely computes the number of likes, comments or actions in parallel.
+- Each counter is divided into a number of shards. Each shard parallely computes the number of likes, comments or actions.
 - Write requests are balanced along these shards
 
 What is the workflow of sharded counters? 
