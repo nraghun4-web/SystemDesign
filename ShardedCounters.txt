@@ -27,3 +27,14 @@ What are the API's for Sharded Counter?
 - WriteCounter
       -counter_id
       -action_type
+
+How many shards should be created against each new tweet?
+  - This depends on the number of followers and type of post for each tweet.
+  - The shards are dcremented the moment, the topic is not hot anymore (eg not receiving many likes, based on feedback mechanism)
+
+How will the shard value be incremented for a specific tweet?
+  - Can be chosen based on round robin, random or metric based. metrics can be Country, location, user_type
+
+What will happen in the system when read requests come from the end users?
+When users generate a timeline, read requests are forwarded to the nearest servers, and then the persisted values in the store can be used to respond. This storage also helps to show the region-wise Top K trends. The list of local Top K trends is sent to the application server, and then the application server sorts all the lists to make a list of global Top K trends. Eventually, the application server sends all counters’ details to the cache.
+  
