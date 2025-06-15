@@ -1,0 +1,103 @@
+Distributed Search.
+  What is an inverted index? 
+    It is a ket value mapping of a term from a document in a database such that key is the term value is list/tuple of (document_id, frequency, occurence), 
+    Advatanages 
+      - supports full text searches
+      - Reduce the time counting the number of occurences in the document
+    Disadvanatages:
+      -  There is storage overhead for maintaining the inverted index along with the actual documents. However, we reduce the search time.
+      - Maintenance costs (processing) on adding, updating, or deleting a document. To add a document, we extract terms from the documents
+
+
+What are the components of the high level design of distributed search?
+  Online - The online phase consists of searching for results against the search query by the user.
+  Offline = Crawling data from the web saving indexes and builidng the mapping.
+
+1. Crawler - A crawler retrieves all the textual information from a website, example in case of youtube, the video title, description, twitter - tweet content and poster
+  It stores all of them as a JSON object in the database.
+2.The indexer fetches the documents from a distributed storage and indexes these documents using MapReduce, which runs on a distributed cluster of commodity machines. 
+  The indexer uses a distributed data processing system like MapReduce for parallel and distributed index construction.
+  The constructed index table is stored in the distributed storage.
+3. MapReduce - MapReduce is a programming model and an associated implementation for processing and generating big data sets with a parallel, distributed algorithm on a cluster of commodity machines'
+4. Indexer
+5. Distributed Storage- 
+
+How is the data used for indexing after crawling?
+There are two ways how indexes are created after crawling
+    -Document partitioning: In document partitioning, all the documents collected by the web crawler are partitioned into subsets of documents. Each node then performs indexing on a subset of documents that are assigned to it.
+    -Term partitioning: The dictionary of all terms is partitioned into subsets, with each subset residing at a single node. For example, a subset of documents is processed and indexed by a node containing the term “search.”
+
+
+We begin with a document set that has already been collected by a crawler. The Cluster Manager is responsible for dividing this input document set into N partitions (e.g., N = 3 in the example).
+
+The size of each partition is determined based on several factors:
+
+Total size of the input data
+
+Expected computational load
+
+Available memory
+
+Number of healthy nodes in the cluster
+
+Not all nodes may be available at a given time due to potential failures or maintenance. To ensure reliability, the Cluster Manager continuously monitors the health of each node via periodic heartbeats.
+
+To distribute documents across partitions, the system uses a hashing function that assigns each document to one of the N partitions in a deterministic way.
+
+Once the partitions are created, the Cluster Manager launches the indexing process on all N partitions in parallel, utilizing up to N nodes in the cluster (depending on availability). Each indexing job operates independently and produces a small inverted index, which is stored locally on the corresponding node.
+
+As a result, instead of building one large monolithic inverted index, the system generates N smaller inverted indices, which enhances parallelism, fault tolerance, and scalability
+
+
+Replication in Indexing and Search
+To improve performance and reliability, we create replicas of the nodes that index documents. Each replica builds the same index for its assigned partition.
+
+What is a Replica Group?
+Instead of having just one set of nodes to answer queries, we now have R groups of nodes — where R is the number of replicas (usually 3). Each group has a full copy of all partitions, so any group can handle user queries.
+
+If traffic increases or a node fails, we can rely on the other groups. These groups are spread across different availability zones (AZs) for better performance and to stay online even if one zone goes down.
+
+✅ A load balancer helps route user queries to the right group and retries in case of failure.
+
+How Replication Works
+A replication factor of 3 means each partition is stored on 3 different nodes.
+
+Out of these, one node is the primary, and the other two are replicas.
+
+All three nodes index the data in the same way, so they end up with the same index.
+
+Example Setup
+Suppose we have 4 partitions: P1, P2, P3, and P4.
+
+These are spread across two zones: AZ1 and AZ2.
+
+Each node holds:
+
+1 primary partition
+
+2 replicas of other partitions
+
+For example:
+
+Partition P4 is stored on:
+
+Node 2 in AZ2 (replica)
+
+Node 1 in AZ2 (replica)
+
+Node 2 in AZ1 (replica)
+
+Each partition's three replicas are split across zones so the system remains available even if one zone fails.
+
+Indexing with Replicas
+When indexing partition P1, the data is sent to all three replicas at the same time.
+Each node processes it and builds the same index. So if one node goes down, the other two can continue.
+
+Searching with Replicas
+Since we have three copies of each partition's index:
+
+The load balancer picks any one to handle a query.
+
+This means we can handle more queries in parallel (up to 3x more).
+
+The system stays fast and available, even if one node or zone fails.
