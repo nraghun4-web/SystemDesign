@@ -1,0 +1,19 @@
+Payment System
+
+
+Who handles credit card processing? 
+Third party apps such as sas stripe, square.
+
+How many transaactions a day? 
+One million
+
+What are the flows in a payment system? 
+  pay in flow - Money from customers (via payment system) to sellers
+  pay out flow -money from payment system to sellers
+
+Non functional requirements
+Resilience and fault tolerance.
+
+What is PSP?
+PSP is payment service provider.
+
